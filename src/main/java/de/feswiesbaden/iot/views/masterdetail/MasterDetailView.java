@@ -1,5 +1,10 @@
 package de.feswiesbaden.iot.views.masterdetail;
 
+import java.util.Optional;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -25,12 +30,10 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import de.feswiesbaden.iot.data.Person;
-import de.feswiesbaden.iot.services.PersonService;
+
+import de.feswiesbaden.iot.data.person.Person;
+import de.feswiesbaden.iot.data.person.PersonService;
 import de.feswiesbaden.iot.views.MainLayout;
-import java.util.Optional;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @PageTitle("Master-Detail")
 @Route(value = "master-detail/:personID?/:action?(edit)", layout = MainLayout.class)

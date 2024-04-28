@@ -5,7 +5,7 @@ package de.feswiesbaden.iot.views;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 
-import de.feswiesbaden.iot.mqttClient.MqttValue;
+import de.feswiesbaden.iot.data.mqttclient.MqttValue;
 
 
 public class MainViewController {

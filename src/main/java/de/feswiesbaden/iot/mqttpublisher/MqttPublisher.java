@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.mqttclient;
+package de.feswiesbaden.iot.mqttpublisher;
 
 
 
@@ -10,6 +10,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+
+import de.feswiesbaden.iot.UriResolver;
 
 
 public class MqttPublisher {

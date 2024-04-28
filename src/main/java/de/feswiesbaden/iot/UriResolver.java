@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.mqttclient;
+package de.feswiesbaden.iot;
 
 import java.net.InetAddress;
 import java.net.URI;

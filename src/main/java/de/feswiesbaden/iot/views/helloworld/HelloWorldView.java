@@ -10,7 +10,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
-import de.feswiesbaden.iot.mqttClient.MqttValue;
+import de.feswiesbaden.iot.data.mqttclient.MqttValue;
 import de.feswiesbaden.iot.views.MainLayout;
 
 @PageTitle("Hello World")

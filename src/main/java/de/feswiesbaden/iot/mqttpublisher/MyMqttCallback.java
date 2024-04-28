@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.mqttclient;
+package de.feswiesbaden.iot.mqttpublisher;
 
 
 import java.util.List;
@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import de.feswiesbaden.iot.data.mqttclient.MqttValue;
 import de.feswiesbaden.iot.views.MainViewController;
 
 public class MyMqttCallback implements MqttCallback  {

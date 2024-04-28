@@ -1,8 +1,7 @@
-package de.feswiesbaden.iot.services;
+package de.feswiesbaden.iot.data;
 
-import de.feswiesbaden.iot.data.Person;
-import de.feswiesbaden.iot.data.PersonRepository;
 import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
