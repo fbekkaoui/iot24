@@ -1,8 +1,10 @@
-package de.feswiesbaden.iot.data;
+package de.feswiesbaden.iot.data.person;
 
+import java.time.LocalDate;
+
+import de.feswiesbaden.iot.data.AbstractEntity;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.Email;
-import java.time.LocalDate;
 
 @Entity
 public class Person extends AbstractEntity {

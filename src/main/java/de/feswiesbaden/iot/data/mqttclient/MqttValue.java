@@ -1,4 +1,6 @@
-package de.feswiesbaden.iot.mqttclient;
+package de.feswiesbaden.iot.data.mqttclient;
+
+
 
 
 import java.time.LocalDateTime;
@@ -8,7 +10,6 @@ import de.feswiesbaden.iot.data.AbstractEntity;
 import jakarta.persistence.Entity;
 
 @Entity
-
 public class MqttValue extends AbstractEntity {
     private String message;
     private String topic;

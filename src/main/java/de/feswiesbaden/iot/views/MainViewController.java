@@ -12,7 +12,7 @@ public class MainViewController {
     private UI ui;
     private Grid<MqttValue> grid;
 
-    MainViewController(UI ui, Grid<MqttValue> grid){
+    public MainViewController(UI ui, Grid<MqttValue> grid){
 
         this.ui=ui;
         this.grid=grid;
@@ -21,6 +21,12 @@ public class MainViewController {
     public void updateGrid(){
         
         ui.access(() -> grid.getDataProvider().refreshAll());
+    }
+
+    public void setParam(UI ui, Grid<MqttValue> grid) {
+
+        this.ui=ui;
+        this.grid=grid;
     }
     
 }

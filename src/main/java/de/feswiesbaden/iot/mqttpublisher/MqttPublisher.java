@@ -2,16 +2,11 @@ package de.feswiesbaden.iot.mqttpublisher;
 
 
 
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-
-import de.feswiesbaden.iot.UriResolver;
 
 
 public class MqttPublisher {
@@ -24,9 +19,9 @@ public class MqttPublisher {
  
         this.myCallback=myCallback;
         try {
-             client=new MqttClient(UriResolver.Resolve(mqttBroker).toString(), clientName);
+             client=new MqttClient(mqttBroker, clientName);
         
-        } catch (MqttException | URISyntaxException | UnknownHostException e) {
+        } catch (MqttException e) {
             e.printStackTrace();
             //System.exit(1);
         }

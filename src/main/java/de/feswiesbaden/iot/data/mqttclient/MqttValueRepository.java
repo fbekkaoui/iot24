@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.mqttclient;
+package de.feswiesbaden.iot.data.mqttclient;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;

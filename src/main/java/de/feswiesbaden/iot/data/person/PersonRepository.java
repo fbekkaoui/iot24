@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.data;
+package de.feswiesbaden.iot.data.person;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;
