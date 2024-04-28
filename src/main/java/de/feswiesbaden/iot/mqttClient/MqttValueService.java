@@ -4,7 +4,6 @@ package de.feswiesbaden.iot.mqttClient;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,7 @@ public class MqttValueService {
         this.repository = repository;
     }
 
-    public Optional<MqttValue> get(UUID id) {
+    public Optional<MqttValue> get(Long id) {
         return repository.findById(id);
     }
 
@@ -27,7 +26,7 @@ public class MqttValueService {
         return repository.save(entity);
     }
 
-    public void delete(UUID id) {
+    public void delete(Long id) {
         repository.deleteById(id);
     }
 
