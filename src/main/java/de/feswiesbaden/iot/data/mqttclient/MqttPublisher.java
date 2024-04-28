@@ -1,4 +1,4 @@
-package de.feswiesbaden.iot.mqttClient;
+package de.feswiesbaden.iot.mqttclient;
 
 
 
