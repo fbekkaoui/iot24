@@ -1,8 +1,9 @@
-package de.feswiesbaden.iot.mqttpublisher;
+package de.feswiesbaden.iot.mqttconnector;
 
 
-import java.util.List;
+import java.util.logging.Logger;
 
+import de.feswiesbaden.iot.data.mqttclient.MqttValueService;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -12,44 +13,42 @@ import de.feswiesbaden.iot.views.MainViewController;
 
 public class MyMqttCallback implements MqttCallback  {
 
-    List<MqttValue> mqttValues;
+    private final MqttValueService mqttValueService;
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final MainViewController mainViewController;
 
-    private MainViewController mainViewController;
-   
+    public MyMqttCallback(MqttValueService mqttValueService, MainViewController mainViewController){
 
-    public MyMqttCallback(List<MqttValue> mqttValues, MainViewController mainViewController){
-        
+        this.mqttValueService=mqttValueService;
         this.mainViewController=mainViewController;
-        this.mqttValues=mqttValues;
 
-        System.out.println("Callback started!!");
+        logger.info("Callback started!!");
     }
     @Override
     public void connectionLost(Throwable cause) {
         // TODO Auto-generated method stub
-         
+        logger.info("Connection lost");
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         // TODO Auto-generated method stub
-        
-        System.out.println("Delivery complete");
-        
+        logger.info("Delivery complete");
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage message) throws Exception {
+    public void messageArrived(String topic, MqttMessage message) {
         // TODO Auto-generated method stub
 
-
         MqttValue value =new MqttValue(message.toString(), topic);
-        System.out.println(value.toString());
 
-        mqttValues.add(value);
+        logger.info("Message arrived:");
+        logger.info(value.toString());
+
+        mqttValueService.update(value);
+
         mainViewController.updateGrid();
-    
-        
+
     }
     
 }

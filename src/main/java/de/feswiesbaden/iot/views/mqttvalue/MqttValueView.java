@@ -1,12 +1,9 @@
 package de.feswiesbaden.iot.views.mqttvalue;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -23,26 +20,32 @@ import com.vaadin.flow.router.RouteAlias;
 
 import de.feswiesbaden.iot.data.mqttclient.MqttValue;
 import de.feswiesbaden.iot.data.mqttclient.MqttValueService;
-import de.feswiesbaden.iot.mqttpublisher.MqttPublisher;
-import de.feswiesbaden.iot.mqttpublisher.MyMqttCallback;
+import de.feswiesbaden.iot.mqttconnector.MqttConnector;
+import de.feswiesbaden.iot.mqttconnector.MyMqttCallback;
 import de.feswiesbaden.iot.views.MainLayout;
 import de.feswiesbaden.iot.views.MainViewController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 
 @PageTitle("Hello World")
 @Route(value = "hello", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
+
 public class MqttValueView extends VerticalLayout {
 
-    private final static Logger logger = Logger.getLogger(MqttValueView.class.getName());
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     private Grid<MqttValue> grid; //Grid für die Daten
-    private List<MqttValue> mqttValues; //Liste für die Daten
-    private MqttPublisher publisher;  //MQTT Publisher
-    private String brokerAdress="tcp://127.0.0.1:1883"; //Adresse des MQTT Brokers
+
+    private MqttConnector mqttConnector;  //MQTT Publisher
+
+    @Value("${mqtt.broker.address}")
+    private String brokerAddress; //Adresse des Mqtt Brokers
+
+    private final Environment env; //Umgebungsvariablen für die Konfiguration Mqtt Broker siehe application.properties
+
     MqttValueService mqttValueService; //Service für die Datenbank
     //private FeederThread thread; //Thread bsp, falls etwas im Hintergrund wiederholend durchgeführt werden soll
-    //static Logger logger = Logger.getLogger("MainView");
-
 
     /**
      * Wird aufgerufen, wenn die View angezeigt wird
@@ -51,14 +54,14 @@ public class MqttValueView extends VerticalLayout {
     protected void onAttach(AttachEvent attachEvent) {
 
         //Singelton
-        if(publisher==null){
-            publisher = new MqttPublisher (brokerAdress, "Client-01",
-                    new MyMqttCallback(mqttValues,
-                            new MainViewController(attachEvent.getUI(), grid)
-                    )
+        if(mqttConnector ==null){
+            mqttConnector = new MqttConnector(brokerAddress, "Client-01",
+                    new MyMqttCallback(mqttValueService, new MainViewController(attachEvent.getUI(), grid))
             );
-            publisher.start("user", "passwd");
-            publisher.subscribe("#");
+            mqttConnector.start(
+                    env.getProperty("mqtt.broker.username"),
+                    env.getProperty("mqtt.broker.password")); //Verbindung zum Broker aufbauen
+            mqttConnector.subscribe("#"); //abonniert alle Topics
         }
 
         logger.info("OnAttach!!");
@@ -81,12 +84,12 @@ public class MqttValueView extends VerticalLayout {
          //thread = null;
      }
 
-    public MqttValueView(MqttValueService mqttValueService) {
+    public MqttValueView(Environment env, MqttValueService mqttValueService) {
+        this.env = env;
 
         this.mqttValueService=mqttValueService;
-        mqttValues = mqttValueService.findAll();
 
-        add(new Span("Mqtt Broker Adress: "+brokerAdress));
+        add(new Span("Mqtt Broker Address: "+ brokerAddress));
         setSizeFull();
         genExamplePublish();
         genExampleSubscribe();
@@ -103,17 +106,23 @@ public class MqttValueView extends VerticalLayout {
         TextField tfMessage = new TextField("Message");
         TextField tfTopic = new TextField("Topic");
 
+        Button btnGridUpdater=new Button("Update Grid");
+        btnGridUpdater.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btnGridUpdater.addClickListener(e-> {
+            grid.setItems(mqttValueService.findAll());
+        });
+
         btnPublish.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnPublish.addClickListener(e-> {
-            publisher.publish(tfTopic.getValue(), tfMessage.getValue());
-            mqttValueService.update(new MqttValue(tfMessage.getValue(), tfTopic.getValue()));
-
+            MqttValue value = new MqttValue(tfMessage.getValue(), tfTopic.getValue());
+            mqttConnector.publish(value);
+            //grid.setItems(mqttValueService.findAll());
         });
 
         ePublish.setVerticalComponentAlignment(FlexComponent.Alignment.END, btnPublish);
         ePublish.add(tfTopic, tfMessage, btnPublish);
 
-        add(ePublish);
+        add(ePublish, btnGridUpdater);
 
     }
 
@@ -123,21 +132,17 @@ public class MqttValueView extends VerticalLayout {
     public void genExampleSubscribe(){
 
         grid = new Grid<>(MqttValue.class, false);
-        grid.setItems(mqttValues);
+        grid.setItems(mqttValueService.findAll());
 
         grid.addColumn(MqttValue::getId).setHeader("id").setSortable(true);
         grid.addColumn(new LocalDateTimeRenderer<>(MqttValue::getTimeStamp,"dd.MM.YYYY HH:mm:ss"))
                 .setHeader("Zeitstempel").setSortable(true).setComparator(MqttValue::getTimeStamp);
         grid.addColumn(MqttValue::getTopic).setHeader("Topic").setSortable(false);
-        grid.addColumn(MqttValue::getMessage).setHeader("Message").setSortable(false);
+        grid.addColumn(MqttValue::getMessage).setHeader("Message").setSortable(false).setFlexGrow(1);
 
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addItemClickListener(event -> Notification.show(event.getItem().toString()));
 
         add(grid);
-
     }
-
-
-
 }
