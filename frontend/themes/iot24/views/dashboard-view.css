@@ -1,0 +1,127 @@
+.dashboard-view {
+  box-sizing: border-box;
+  gap: 0.9rem;
+  height: 100%;
+  overflow: hidden;
+  padding: 1rem 1.25rem 1.1rem;
+}
+
+.dashboard-metrics,
+.dashboard-charts {
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 0.9rem;
+}
+
+.dashboard-charts {
+  min-height: 0;
+}
+
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 0;
+  padding: 1rem 1.1rem;
+}
+
+.dashboard-metric-card {
+  flex: 1 1 0;
+}
+
+.dashboard-chart-card {
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+.dashboard-wide-card {
+  align-self: stretch;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  width: 100%;
+  min-height: 0;
+}
+
+.dashboard-card h3,
+.dashboard-card p {
+  margin: 0;
+}
+
+.dashboard-card > p:first-of-type {
+  color: #123c36;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.dashboard-note {
+  color: #5f6b7a;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.dashboard-apex-chart {
+  display: block;
+  flex: 1;
+  min-height: 16rem;
+  width: 100%;
+}
+
+.dashboard-apex-chart-wide {
+  min-height: 19rem;
+}
+
+.dashboard-empty {
+  align-items: center;
+  color: #5f6b7a;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 8rem;
+  text-align: center;
+}
+
+.dashboard-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.dashboard-legend-inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.dashboard-legend div {
+  align-items: center;
+  color: #334155;
+  display: flex;
+  font-size: 0.9rem;
+  gap: 0.45rem;
+}
+
+.dashboard-legend span {
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 0.75rem;
+  width: 0.75rem;
+}
+
+@media (max-width: 960px) {
+  .dashboard-view {
+    height: auto;
+    overflow: auto;
+  }
+
+  .dashboard-metrics,
+  .dashboard-charts {
+    flex-wrap: wrap;
+  }
+}

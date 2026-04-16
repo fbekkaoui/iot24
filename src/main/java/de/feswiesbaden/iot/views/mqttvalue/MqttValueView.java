@@ -1,13 +1,12 @@
 package de.feswiesbaden.iot.views.mqttvalue;
 
-import java.util.logging.Logger;
-
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -16,133 +15,185 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.LocalDateTimeRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
-
+import de.feswiesbaden.iot.data.mqttclient.MqttConnectionService;
 import de.feswiesbaden.iot.data.mqttclient.MqttValue;
 import de.feswiesbaden.iot.data.mqttclient.MqttValueService;
-import de.feswiesbaden.iot.mqttconnector.MqttConnector;
-import de.feswiesbaden.iot.mqttconnector.MyMqttCallback;
 import de.feswiesbaden.iot.views.MainLayout;
-import de.feswiesbaden.iot.views.MainViewController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
-@PageTitle("Hello World")
-@Route(value = "hello", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
-
+@PageTitle("MQTT")
+@Route(value = "mqtt", layout = MainLayout.class)
 public class MqttValueView extends VerticalLayout {
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Environment env;
+    private final MqttValueService mqttValueService;
+    private final MqttConnectionService mqttConnectionService;
+    private final TextField brokerAddressField = new TextField("MQTT Broker Address");
+    private final Span connectionStatus = new Span("Nicht verbunden");
+    private final Runnable messageListener = this::refreshGrid;
+    private final Runnable connectionLostListener = this::showConnectionLost;
 
-    private Grid<MqttValue> grid; //Grid für die Daten
+    private Grid<MqttValue> grid;
 
-    private MqttConnector mqttConnector;  //MQTT Publisher
+    public MqttValueView(Environment env, MqttValueService mqttValueService, MqttConnectionService mqttConnectionService,
+            @Value("${mqtt.broker.address}") String defaultBrokerAddress) {
+        this.env = env;
+        this.mqttValueService = mqttValueService;
+        this.mqttConnectionService = mqttConnectionService;
 
-    @Value("${mqtt.broker.address}")
-    private String brokerAddress; //Adresse des Mqtt Brokers
+        setSizeFull();
+        setSpacing(true);
+        setPadding(true);
+        add(new H2("MQTT Arbeitsbereich"));
+        configureConnectionControls(defaultBrokerAddress);
+        configurePublishControls();
+        configureGrid();
+    }
 
-    private final Environment env; //Umgebungsvariablen für die Konfiguration Mqtt Broker siehe application.properties
-
-    MqttValueService mqttValueService; //Service für die Datenbank
-    //private FeederThread thread; //Thread bsp, falls etwas im Hintergrund wiederholend durchgeführt werden soll
-
-    /**
-     * Wird aufgerufen, wenn die View angezeigt wird
-     */
     @Override
     protected void onAttach(AttachEvent attachEvent) {
-
-        //Singelton
-        if(mqttConnector ==null){
-            mqttConnector = new MqttConnector(brokerAddress, "Client-01",
-                    new MyMqttCallback(mqttValueService, new MainViewController(attachEvent.getUI(), grid))
-            );
-            mqttConnector.start(
-                    env.getProperty("mqtt.broker.username"),
-                    env.getProperty("mqtt.broker.password")); //Verbindung zum Broker aufbauen
-            mqttConnector.subscribe("#"); //abonniert alle Topics
-        }
-
-        logger.info("OnAttach!!");
-
-        //TODO Thread bsp, falls etwas im Hintergrund wiederholend durchgeführt werden soll
-        /*if(thread==null) {
-            thread = new FeederThread(TODO thread was mitgeben?);
-            thread.run();
-        }
-        */
+        mqttConnectionService.addMessageListener(messageListener);
+        mqttConnectionService.addConnectionLostListener(connectionLostListener);
+        refreshConnectionStatus();
+        refreshGrid();
     }
 
-     /**
-     * Wird aufgerufen, wenn die View nicht mehr angezeigt wird
-     */
-     @Override
-     protected void onDetach(DetachEvent detachEvent) {
-         // TODO document why this method is empty
-         //thread.interrupt();
-         //thread = null;
-     }
-
-    public MqttValueView(Environment env, MqttValueService mqttValueService) {
-        this.env = env;
-
-        this.mqttValueService=mqttValueService;
-
-        add(new Span("Mqtt Broker Address: "+ brokerAddress));
-        setSizeFull();
-        genExamplePublish();
-        genExampleSubscribe();
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        mqttConnectionService.removeMessageListener(messageListener);
+        mqttConnectionService.removeConnectionLostListener(connectionLostListener);
     }
 
-    /**
-     * Beispiel für die Veröffentlichung von Daten
-     */
-    public void genExamplePublish(){
+    private void configureConnectionControls(String defaultBrokerAddress) {
+        brokerAddressField.setWidth("22rem");
+        brokerAddressField.setValue(defaultBrokerAddress);
 
-        HorizontalLayout ePublish= new HorizontalLayout();
+        Button connectButton = new Button("Verbinden");
+        connectButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        connectButton.addClickListener(event -> connectToBroker());
 
-        Button btnPublish=new Button("Publish");
-        TextField tfMessage = new TextField("Message");
-        TextField tfTopic = new TextField("Topic");
+        Button disconnectButton = new Button("Trennen");
+        disconnectButton.addClickListener(event -> disconnectFromBroker());
 
-        Button btnGridUpdater=new Button("Update Grid");
-        btnGridUpdater.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        btnGridUpdater.addClickListener(e-> {
-            grid.setItems(mqttValueService.findAll());
-        });
-
-        btnPublish.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        btnPublish.addClickListener(e-> {
-            MqttValue value = new MqttValue(tfMessage.getValue(), tfTopic.getValue());
-            mqttConnector.publish(value);
-            //grid.setItems(mqttValueService.findAll());
-        });
-
-        ePublish.setVerticalComponentAlignment(FlexComponent.Alignment.END, btnPublish);
-        ePublish.add(tfTopic, tfMessage, btnPublish);
-
-        add(ePublish, btnGridUpdater);
-
+        HorizontalLayout connectionLayout = new HorizontalLayout(
+                brokerAddressField,
+                connectButton,
+                disconnectButton,
+                connectionStatus);
+        connectionLayout.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        add(connectionLayout);
     }
 
-    /**
-     * Beispiel für die Anzeige der Daten in einem Grid
-     */
-    public void genExampleSubscribe(){
+    private void configurePublishControls() {
+        HorizontalLayout publishLayout = new HorizontalLayout();
 
+        Button publishButton = new Button("Publish");
+        TextField messageField = new TextField("Message");
+        TextField topicField = new TextField("Topic");
+
+        publishButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        publishButton.addClickListener(event -> publishMessage(topicField.getValue(), messageField.getValue()));
+
+        publishLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END, publishButton);
+        publishLayout.add(topicField, messageField, publishButton);
+        add(publishLayout);
+    }
+
+    private void configureGrid() {
         grid = new Grid<>(MqttValue.class, false);
-        grid.setItems(mqttValueService.findAll());
-
         grid.addColumn(MqttValue::getId).setHeader("id").setSortable(true);
-        grid.addColumn(new LocalDateTimeRenderer<>(MqttValue::getTimeStamp,"dd.MM.YYYY HH:mm:ss"))
+        grid.addColumn(new LocalDateTimeRenderer<>(MqttValue::getTimeStamp, "dd.MM.yyyy HH:mm:ss"))
                 .setHeader("Zeitstempel").setSortable(true).setComparator(MqttValue::getTimeStamp);
-        grid.addColumn(MqttValue::getTopic).setHeader("Topic").setSortable(false);
-        grid.addColumn(MqttValue::getMessage).setHeader("Message").setSortable(false).setFlexGrow(1);
-
+        grid.addColumn(MqttValue::getTopic).setHeader("Topic");
+        grid.addColumn(MqttValue::getMessage).setHeader("Message").setFlexGrow(1);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addItemClickListener(event -> Notification.show(event.getItem().toString()));
 
+        refreshGrid();
         add(grid);
+    }
+
+    private void connectToBroker() {
+        String brokerAddress = brokerAddressField.getValue() == null ? "" : brokerAddressField.getValue().trim();
+        if (brokerAddress.isEmpty()) {
+            showDisconnected("Bitte eine Broker-Adresse eingeben");
+            Notification.show("Bitte eine Broker-Adresse eingeben");
+            return;
+        }
+
+        boolean connected = mqttConnectionService.connect(
+                brokerAddress,
+                env.getProperty("mqtt.broker.username"),
+                env.getProperty("mqtt.broker.password"));
+
+        if (connected) {
+            showConnected(brokerAddress);
+            Notification.show("Verbindung zum MQTT-Broker hergestellt");
+        } else {
+            showDisconnected("Verbindung zu " + brokerAddress + " fehlgeschlagen");
+            Notification.show("Verbindung zum MQTT-Broker fehlgeschlagen");
+        }
+    }
+
+    private void disconnectFromBroker() {
+        mqttConnectionService.disconnect();
+        showDisconnected("Nicht verbunden");
+    }
+
+    private void publishMessage(String topic, String message) {
+        if (!mqttConnectionService.isConnected()) {
+            Notification.show("Bitte zuerst eine Verbindung zum MQTT-Broker herstellen");
+            return;
+        }
+
+        mqttConnectionService.publish(topic, message);
+    }
+
+    private void refreshGrid() {
+        if (grid == null) {
+            return;
+        }
+
+        if (getUI().isPresent()) {
+            getUI().get().access(() -> grid.setItems(mqttValueService.findAll()));
+        } else {
+            grid.setItems(mqttValueService.findAll());
+        }
+    }
+
+    private void refreshConnectionStatus() {
+        if (mqttConnectionService.isConnected()) {
+            showConnected(mqttConnectionService.getCurrentBrokerAddress());
+        } else {
+            showDisconnected("Nicht verbunden");
+        }
+    }
+
+    private void showConnected(String brokerAddress) {
+        setConnectionStatus("Verbunden mit " + brokerAddress, true);
+    }
+
+    private void showDisconnected(String message) {
+        setConnectionStatus(message, false);
+    }
+
+    private void showConnectionLost() {
+        showDisconnected("Verbindung verloren");
+    }
+
+    private void setConnectionStatus(String message, boolean connected) {
+        Runnable update = () -> {
+            connectionStatus.setText(message);
+            connectionStatus.getStyle().set(
+                    "color",
+                    connected ? "var(--lumo-success-text-color)" : "var(--lumo-error-text-color)");
+        };
+
+        if (getUI().isPresent()) {
+            getUI().get().access(update::run);
+        } else {
+            update.run();
+        }
     }
 }

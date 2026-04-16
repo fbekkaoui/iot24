@@ -1,112 +1,101 @@
 package de.feswiesbaden.iot.views;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
-import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.Nav;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.html.UnorderedList;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.router.AfterNavigationEvent;
+import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.theme.lumo.LumoUtility.AlignItems;
-import com.vaadin.flow.theme.lumo.LumoUtility.BoxSizing;
-import com.vaadin.flow.theme.lumo.LumoUtility.Display;
-import com.vaadin.flow.theme.lumo.LumoUtility.FlexDirection;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
-import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
-import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
-import com.vaadin.flow.theme.lumo.LumoUtility.Height;
-import com.vaadin.flow.theme.lumo.LumoUtility.ListStyleType;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
-import com.vaadin.flow.theme.lumo.LumoUtility.Overflow;
-import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
-import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
-import com.vaadin.flow.theme.lumo.LumoUtility.Whitespace;
-import com.vaadin.flow.theme.lumo.LumoUtility.Width;
+import de.feswiesbaden.iot.views.dashboard.DashboardView;
+import de.feswiesbaden.iot.views.documentation.DocumentationView;
 import de.feswiesbaden.iot.views.mqttvalue.MqttValueView;
-import de.feswiesbaden.iot.views.masterdetail.MasterDetailView;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 
-/**
- * The main view is a top-level placeholder for other views.
- */
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
-    /**
-     * A simple navigation item component, based on ListItem element.
-     */
-    public static class MenuItemInfo extends ListItem {
-
-        private final Class<? extends Component> view;
-
-        public MenuItemInfo(String menuTitle, Component icon, Class<? extends Component> view) {
-            this.view = view;
-            RouterLink link = new RouterLink();
-            // Use Lumo classnames for various styling
-            link.addClassNames(Display.FLEX, Gap.XSMALL, Height.MEDIUM, AlignItems.CENTER, Padding.Horizontal.SMALL,
-                    TextColor.BODY);
-            link.setRoute(view);
-
-            Span text = new Span(menuTitle);
-            // Use Lumo classnames for various styling
-            text.addClassNames(FontWeight.MEDIUM, FontSize.MEDIUM, Whitespace.NOWRAP);
-
-            if (icon != null) {
-                link.add(icon);
-            }
-            link.add(text);
-            add(link);
-        }
-
-        public Class<?> getView() {
-            return view;
-        }
-
-    }
+    private final Tabs navigationTabs = new Tabs();
+    private final Map<Class<? extends Component>, Tab> tabsByView = new LinkedHashMap<>();
 
     public MainLayout() {
         addToNavbar(createHeaderContent());
         setDrawerOpened(false);
     }
 
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+        Tab selectedTab = tabsByView.get(getContent().getClass());
+        if (selectedTab != null) {
+            navigationTabs.setSelectedTab(selectedTab);
+        }
+    }
+
     private Component createHeaderContent() {
         Header header = new Header();
-        header.addClassNames(BoxSizing.BORDER, Display.FLEX, FlexDirection.COLUMN, Width.FULL);
+        header.getStyle().set("padding", "1rem 1.5rem");
+        header.setWidthFull();
 
-        Div layout = new Div();
-        layout.addClassNames(Display.FLEX, AlignItems.CENTER, Padding.Horizontal.LARGE);
+        HorizontalLayout layout = new HorizontalLayout();
+        layout.setWidthFull();
+        layout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+        layout.setSpacing(true);
 
-        H1 appName = new H1("IOT");
-        appName.addClassNames(Margin.Vertical.MEDIUM, Margin.End.AUTO, FontSize.LARGE);
-        layout.add(appName);
+        H1 appName = new H1("Internet of Things Beispielanwendung");
+        appName.getStyle().set("margin", "0");
+        appName.getStyle().set("font-size", "1.75rem");
+        appName.getStyle().set("font-weight", "600");
 
-        Nav nav = new Nav();
-        nav.addClassNames(Display.FLEX, Overflow.AUTO, Padding.Horizontal.MEDIUM, Padding.Vertical.XSMALL);
+        navigationTabs.add(createTab("Dashboard", LineAwesomeIcon.CHART_BAR_SOLID.create(), DashboardView.class));
+        navigationTabs.add(createTab("MQTT", LineAwesomeIcon.GLOBE_SOLID.create(), MqttValueView.class));
+        navigationTabs.add(createTab("Readme.md", LineAwesomeIcon.FILE_ALT_SOLID.create(), DocumentationView.class));
+        navigationTabs.getStyle().set("margin", "0 auto");
 
-        // Wrap the links in a list; improves accessibility
-        UnorderedList list = new UnorderedList();
-        list.addClassNames(Display.FLEX, Gap.SMALL, ListStyleType.NONE, Margin.NONE, Padding.NONE);
-        nav.add(list);
+        Div leftArea = createBalancedArea();
+        Div centerArea = createBalancedArea();
+        Div rightArea = createBalancedArea();
 
-        for (MenuItemInfo menuItem : createMenuItems()) {
-            list.add(menuItem);
+        leftArea.add(appName);
+        centerArea.add(navigationTabs);
+        leftArea.getStyle().set("display", "flex");
+        leftArea.getStyle().set("align-items", "center");
+        centerArea.getStyle().set("display", "flex");
+        centerArea.getStyle().set("align-items", "center");
+        centerArea.getStyle().set("justify-content", "center");
+        rightArea.getStyle().set("display", "flex");
+        rightArea.getStyle().set("align-items", "center");
 
-        }
-
-        header.add(layout, nav);
+        layout.add(leftArea, centerArea, rightArea);
+        layout.expand(leftArea, centerArea, rightArea);
+        header.add(layout);
         return header;
     }
 
-    private MenuItemInfo[] createMenuItems() {
-        return new MenuItemInfo[]{ //
-                new MenuItemInfo("Mqtt-Example", LineAwesomeIcon.GLOBE_SOLID.create(), MqttValueView.class), //
+    private Tab createTab(String label, Component icon, Class<? extends Component> navigationTarget) {
+        RouterLink link = new RouterLink();
+        link.setRoute(navigationTarget);
+        link.add(icon, new Span(label));
+        link.getStyle().set("text-decoration", "none");
+        link.getStyle().set("display", "flex");
+        link.getStyle().set("align-items", "center");
+        link.getStyle().set("gap", "0.45rem");
 
-                new MenuItemInfo("Master-Detail", LineAwesomeIcon.COLUMNS_SOLID.create(), MasterDetailView.class), //
-
-        };
+        Tab tab = new Tab(link);
+        tabsByView.put(navigationTarget, tab);
+        return tab;
     }
 
+    private Div createBalancedArea() {
+        Div area = new Div();
+        area.getStyle().set("flex", "1");
+        return area;
+    }
 }

@@ -1,61 +1,212 @@
-# IOT
+# IOT MQTT Demo
 
-This project can be used as a starting point to create your own Vaadin application with Spring Boot.
-It contains all the necessary configuration and some placeholder files to get you started.
+![Dashboard der IOT MQTT Demo](./dashboard.png)
 
-## Running the application
+## Überblick
 
-The project is a standard Maven project. To run it from the command line,
-type `mvnw` (Windows), or `./mvnw` (Mac & Linux), then open
-http://localhost:8080 in your browser.
+Dieses Projekt ist eine kleine, gut nachvollziehbare Webanwendung mit **Vaadin**, **Spring Boot**, **H2** und **MQTT**.  
+Es dient als einfache **IoT-Demo** und wurde bewusst so aufgebaut, dass man den Code schnell lesen und verstehen kann.
 
-You can also import the project to your IDE of choice as you would with any
-Maven project. Read more on [how to import Vaadin projects to different IDEs](https://vaadin.com/docs/latest/guide/step-by-step/importing) (Eclipse, IntelliJ IDEA, NetBeans, and VS Code).
+## Funktionen
 
-## Deploying to Production
+Die Anwendung kann:
 
-To create a production build, call `mvnw clean package -Pproduction` (Windows),
-or `./mvnw clean package -Pproduction` (Mac & Linux).
-This will build a JAR file with all the dependencies and front-end resources,
-ready to be deployed. The file can be found in the `target` folder after the build completes.
+- sich mit einem **MQTT-Broker** verbinden
+- **MQTT-Nachrichten empfangen, speichern und senden**
+- gespeicherte Daten in einem **Dashboard visualisieren**
+- eine **integrierte Doku-Ansicht** direkt in der Anwendung anzeigen
 
-Once the JAR file is built, you can run it using
-`java -jar target/iot24-1.0-SNAPSHOT.jar`
+## Einsatzmöglichkeiten
 
-## Project structure
+Das Projekt eignet sich gut als:
 
-- `MainLayout.java` in `src/main/java` contains the navigation setup (i.e., the
-  side/top bar and the main menu). This setup uses
-  [App Layout](https://vaadin.com/docs/components/app-layout).
-- `views` package in `src/main/java` contains the server-side Java views of your application.
-- `views` folder in `frontend/` contains the client-side JavaScript views of your application.
-- `themes` folder in `frontend/` contains the custom CSS styles.
+- **Lernprojekt** für Vaadin, Spring Boot und MQTT
+- kleine **Demo** für Unterricht, Präsentation oder Abgabe
+- **Ausgangspunkt** für eigene IoT-Anwendungen
 
-## Useful links
+## Warum das Projekt gut verständlich ist
 
-- Read the documentation at [vaadin.com/docs](https://vaadin.com/docs).
-- Follow the tutorial at [vaadin.com/docs/latest/tutorial/overview](https://vaadin.com/docs/latest/tutorial/overview).
-- Create new projects at [start.vaadin.com](https://start.vaadin.com/).
-- Search UI components and their usage examples at [vaadin.com/docs/latest/components](https://vaadin.com/docs/latest/components).
-- View use case applications that demonstrate Vaadin capabilities at [vaadin.com/examples-and-demos](https://vaadin.com/examples-and-demos).
-- Build any UI without custom CSS by discovering Vaadin's set of [CSS utility classes](https://vaadin.com/docs/styling/lumo/utility-classes). 
-- Find a collection of solutions to common use cases at [cookbook.vaadin.com](https://cookbook.vaadin.com/).
-- Find add-ons at [vaadin.com/directory](https://vaadin.com/directory).
-- Ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/vaadin) or join our [Discord channel](https://discord.gg/MYFq5RTbBn).
-- Report issues, create pull requests in [GitHub](https://github.com/vaadin).
+Der Aufbau wurde bewusst einfach gehalten:
 
+- klare Trennung von **UI, Services, Datenbank und MQTT**
+- übersichtliche Paketstruktur
+- einfache Standardkonfiguration
+- **H2** als sofort nutzbare Standarddatenbank
+- MQTT-Verbindung läuft unabhängig von einzelnen Views
+- integrierte Dokumentation für einen schnellen Einstieg
 
-## Deploying using Docker
+## Hauptbereiche der Anwendung
 
-To build the Dockerized version of the project, run
+### Dashboard
 
+Das Dashboard zeigt eine kompakte Übersicht über die gespeicherten MQTT-Daten.
+Dazu gehören unter anderem:
+
+- Anzahl gespeicherter Nachrichten
+- Anzahl vorhandener Topics
+- letzte Aktivität
+- Diagramme für Verteilungen und Verläufe
+
+Für die Visualisierung wird **ApexCharts** verwendet.
+
+### MQTT-Ansicht
+
+In der MQTT-Ansicht kann man:
+
+- eine Broker-Adresse eintragen
+- sich mit einem Broker verbinden
+- die Verbindung wieder trennen
+- Nachrichten an ein Topic senden
+- gespeicherte Werte im Grid ansehen
+
+Wichtig: Eine aufgebaute Verbindung bleibt bestehen, auch wenn die View verlassen wird. Sie endet erst beim bewussten Trennen oder beim Schließen der Anwendung.
+
+### Doku-Ansicht
+
+Die Doku-Ansicht zeigt die wichtigsten Projektinformationen direkt in der Anwendung an. Sie dient als schnelle Übersicht für Personen, die das Projekt zum ersten Mal öffnen.
+
+## Verwendete Technologien
+
+- Java 17
+- Spring Boot 3
+- Vaadin 24
+- Spring Data JPA
+- H2-Datenbank
+- Eclipse Paho MQTT Client
+- ApexCharts
+- Maven Wrapper
+
+## Standardkonfiguration
+
+Standardmäßig ist Folgendes konfiguriert:
+
+- Server-Port: `8080`
+- H2-Datenbank als Standarddatenbank
+- MQTT-Broker: `tcp://127.0.0.1:1883`
+- leere MQTT-Zugangsdaten
+
+Wenn lokal ein MQTT-Broker unter `127.0.0.1:1883` läuft, kann das Projekt direkt verwendet werden.
+
+## Projekt starten
+
+Start im Entwicklungsmodus:
+
+```bash
+mvnw
 ```
-mvn clean package -Pproduction
+
+Danach ist die Anwendung erreichbar unter:
+
+```text
+http://localhost:8080
+```
+
+Die H2-Konsole ist im Standardsetup ebenfalls aktiv:
+
+```text
+http://localhost:8080/h2-console
+```
+
+## Build prüfen
+
+Wenn nur geprüft werden soll, ob das Projekt sauber kompiliert, genügt:
+
+```bash
+mvnw test
+```
+
+## Produktionsbuild erstellen
+
+```bash
+mvnw clean package -Pproduction
+java -jar target/iot24-1.0-SNAPSHOT.jar
+```
+
+## Docker-Nutzung
+
+### Docker-Image bauen
+
+```bash
+mvnw clean package -Pproduction
 docker build . -t iot24:latest
 ```
 
-Once the Docker image is correctly built, you can test it locally using
+### Docker-Container starten
 
-```
+```bash
 docker run -p 8080:8080 iot24:latest
 ```
+
+Danach ist die Anwendung ebenfalls unter `http://localhost:8080` erreichbar.
+
+## Projektstruktur
+
+### `src/main/java/de/feswiesbaden/iot/views`
+
+Hier liegt der UI-Code, zum Beispiel für:
+
+- Dashboard
+- MQTT
+- Dokumentation
+
+### `src/main/java/de/feswiesbaden/iot/data/mqttclient`
+
+Hier befinden sich Datenklassen, Repository und Services für gespeicherte MQTT-Werte.
+
+Wichtige Bestandteile sind:
+
+- `MqttValue`
+- `MqttValueRepository`
+- `MqttValueService`
+- `MqttConnectionService`
+
+### `src/main/java/de/feswiesbaden/iot/mqttconnector`
+
+Hier liegt die technische MQTT-Anbindung, also:
+
+- Verbindungsaufbau
+- Publish
+- Subscribe
+- Callback-Verarbeitung
+
+### `src/main/resources`
+
+Hier liegen unter anderem:
+
+- `application.properties`
+- statische Ressourcen
+- weitere Konfigurationsdateien
+
+## Architektur in einfacher Form
+
+Die Anwendung trennt Frontend und Backend nicht in zwei separate Projekte, sondern nutzt **Vaadin**. Dadurch wird die UI in Java entwickelt und als Webanwendung im Browser dargestellt.
+
+Die Struktur lässt sich einfach merken:
+
+- **Views**: Anzeige und Eingaben
+- **Services**: Programmlogik
+- **Repository**: Datenzugriff
+- **MQTT-Connector**: Kommunikation mit dem Broker
+
+## Datenbank
+
+Standardmäßig wird **H2** verwendet. Das ist für diese Demo sinnvoll, weil:
+
+- keine externe Datenbank eingerichtet werden muss
+- das Projekt schnell startbar bleibt
+- das Beispiel einfach und verständlich bleibt
+
+Ein Wechsel auf **MariaDB** ist möglich, erfordert aber Anpassungen in `pom.xml` und `application.properties`.
+
+## Hinweise für Erweiterungen
+
+Wenn das Projekt erweitert werden soll, sind diese Punkte sinnvoll:
+
+- neue UI-Funktionen zuerst in einer View oder kleinen Komponentenklasse kapseln
+- MQTT-spezifische Logik nicht direkt in die Views schreiben
+- Datenbankzugriffe über Repository und Service führen
+- Konfiguration zentral in `application.properties` halten
+
+## Fazit
+
+Dieses Projekt ist eine **kleine, schlanke und gut lesbare IoT-Demo**, die nicht nur funktioniert, sondern auch leicht verständlich aufgebaut ist. Es eignet sich besonders gut, um die Zusammenarbeit von **Vaadin, Spring Boot, Datenbank und MQTT** praktisch zu zeigen.
